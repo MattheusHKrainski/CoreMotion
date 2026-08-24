@@ -1,0 +1,290 @@
+-- CoreMotion — SQL completo para rodar no Supabase SQL Editor
+-- Projeto: https://erpwfjdycdlygxwkdakv.supabase.co
+-- Vá em SQL Editor > New Query > cole este arquivo > Run
+
+-- Limpeza opcional (cuidado: apaga tudo)
+-- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
+
+-- USERS
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  handle VARCHAR(60) NOT NULL UNIQUE,
+  email VARCHAR(160) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'athlete',
+  sport VARCHAR(60) NOT NULL DEFAULT 'Multi-esportes',
+  city VARCHAR(80) NOT NULL DEFAULT '',
+  bio TEXT NOT NULL DEFAULT '',
+  avatar TEXT NOT NULL DEFAULT '',
+  level VARCHAR(30) NOT NULL DEFAULT 'Iniciante',
+  followers INTEGER NOT NULL DEFAULT 0,
+  rating NUMERIC(3,2) NOT NULL DEFAULT '0',
+  price_per_hour INTEGER,
+  verified BOOLEAN NOT NULL DEFAULT false,
+  is_demo BOOLEAN NOT NULL DEFAULT false,
+  banned BOOLEAN NOT NULL DEFAULT false,
+  ban_reason TEXT NOT NULL DEFAULT '',
+  report_count INTEGER NOT NULL DEFAULT 0,
+  last_login_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx ON users(email);
+
+-- SESSIONS
+CREATE TABLE IF NOT EXISTS sessions (
+  id SERIAL PRIMARY KEY,
+  token VARCHAR(80) NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS sessions_token_idx ON sessions(token);
+
+-- STORES (Minha Loja)
+CREATE TABLE IF NOT EXISTS stores (
+  id SERIAL PRIMARY KEY,
+  owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(120) NOT NULL,
+  slug VARCHAR(140) NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '',
+  short_description VARCHAR(200) NOT NULL DEFAULT '',
+  category VARCHAR(60) NOT NULL DEFAULT 'Multi-esportes',
+  logo TEXT NOT NULL DEFAULT '',
+  banner TEXT NOT NULL DEFAULT '',
+  email VARCHAR(160) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  city VARCHAR(80) NOT NULL DEFAULT '',
+  state VARCHAR(2) NOT NULL DEFAULT '',
+  social VARCHAR(160) NOT NULL DEFAULT '',
+  rating NUMERIC(3,2) NOT NULL DEFAULT 4.8,
+  followers INTEGER NOT NULL DEFAULT 0,
+  product_count INTEGER NOT NULL DEFAULT 0,
+  verified BOOLEAN NOT NULL DEFAULT false,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS stores_owner_idx ON stores(owner_id);
+
+-- PRODUCTS
+CREATE TABLE IF NOT EXISTS products (
+  id SERIAL PRIMARY KEY,
+  store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL,
+  seller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  slug VARCHAR(180) NOT NULL UNIQUE,
+  name VARCHAR(180) NOT NULL,
+  brand VARCHAR(80) NOT NULL,
+  category VARCHAR(60) NOT NULL,
+  sport VARCHAR(60) NOT NULL,
+  gender VARCHAR(20) NOT NULL DEFAULT 'Unissex',
+  colorway VARCHAR(80) NOT NULL DEFAULT '',
+  price NUMERIC(10,2) NOT NULL,
+  old_price NUMERIC(10,2),
+  image TEXT NOT NULL,
+  gallery JSONB NOT NULL DEFAULT '[]',
+  description TEXT NOT NULL DEFAULT '',
+  specs JSONB NOT NULL DEFAULT '[]',
+  sizes JSONB NOT NULL DEFAULT '[]',
+  rating NUMERIC(3,2) NOT NULL DEFAULT 4.5,
+  review_count INTEGER NOT NULL DEFAULT 0,
+  stock INTEGER NOT NULL DEFAULT 10,
+  badge VARCHAR(40),
+  scan_code VARCHAR(40) NOT NULL UNIQUE,
+  ean VARCHAR(20) NOT NULL DEFAULT '',
+  tags JSONB NOT NULL DEFAULT '[]',
+  active BOOLEAN NOT NULL DEFAULT true,
+  featured BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS products_sport_idx ON products(sport);
+CREATE INDEX IF NOT EXISTS products_brand_idx ON products(brand);
+CREATE INDEX IF NOT EXISTS products_store_idx ON products(store_id);
+
+-- LISTINGS (C2C Desapego)
+CREATE TABLE IF NOT EXISTS listings (
+  id SERIAL PRIMARY KEY,
+  seller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(180) NOT NULL,
+  description TEXT NOT NULL,
+  price NUMERIC(10,2) NOT NULL,
+  condition VARCHAR(20) NOT NULL DEFAULT 'Seminovo',
+  category VARCHAR(60) NOT NULL,
+  sport VARCHAR(60) NOT NULL,
+  brand VARCHAR(80) NOT NULL DEFAULT '',
+  size VARCHAR(30) NOT NULL DEFAULT 'Único',
+  images JSONB NOT NULL DEFAULT '[]',
+  city VARCHAR(80) NOT NULL DEFAULT '',
+  status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
+  views INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS listings_seller_idx ON listings(seller_id);
+CREATE INDEX IF NOT EXISTS listings_sport_idx ON listings(sport);
+CREATE INDEX IF NOT EXISTS listings_status_idx ON listings(status);
+
+-- REVIEWS
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  author_name VARCHAR(120) NOT NULL,
+  rating INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- CART
+CREATE TABLE IF NOT EXISTS cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+  size VARCHAR(20) NOT NULL DEFAULT 'Único',
+  qty INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS cart_unique_product ON cart_items(user_id, product_id, size);
+CREATE UNIQUE INDEX IF NOT EXISTS cart_unique_listing ON cart_items(user_id, listing_id, size);
+
+-- WISHLIST
+CREATE TABLE IF NOT EXISTS wishlist (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS wishlist_unique_product ON wishlist(user_id, product_id);
+CREATE UNIQUE INDEX IF NOT EXISTS wishlist_unique_listing ON wishlist(user_id, listing_id);
+
+-- ORDERS
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code VARCHAR(24) NOT NULL UNIQUE,
+  subtotal NUMERIC(10,2) NOT NULL,
+  shipping NUMERIC(10,2) NOT NULL DEFAULT '0',
+  total NUMERIC(10,2) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'Confirmado',
+  payment_method VARCHAR(30) NOT NULL DEFAULT 'pix',
+  address TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS order_items (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+  listing_id INTEGER REFERENCES listings(id) ON DELETE SET NULL,
+  name VARCHAR(180) NOT NULL,
+  image TEXT NOT NULL DEFAULT '',
+  size VARCHAR(20) NOT NULL DEFAULT 'Único',
+  unit_price NUMERIC(10,2) NOT NULL,
+  qty INTEGER NOT NULL
+);
+
+-- SOCIAL
+CREATE TABLE IF NOT EXISTS posts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  sport VARCHAR(60) NOT NULL,
+  image_url TEXT,
+  likes INTEGER NOT NULL DEFAULT 0,
+  comments INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS post_likes (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS post_likes_unique ON post_likes(post_id, user_id);
+CREATE TABLE IF NOT EXISTS post_comments (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS follows (
+  id SERIAL PRIMARY KEY,
+  follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS follows_unique ON follows(follower_id, following_id);
+
+-- COACHING
+CREATE TABLE IF NOT EXISTS coach_services (
+  id SERIAL PRIMARY KEY,
+  coach_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(160) NOT NULL,
+  modality VARCHAR(60) NOT NULL,
+  description TEXT NOT NULL,
+  price_per_session INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  service_id INTEGER NOT NULL REFERENCES coach_services(id) ON DELETE CASCADE,
+  coach_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scheduled_for VARCHAR(40) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'Confirmado',
+  price INTEGER NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- NEWS
+CREATE TABLE IF NOT EXISTS news (
+  id SERIAL PRIMARY KEY,
+  slug VARCHAR(200) NOT NULL UNIQUE,
+  title VARCHAR(240) NOT NULL,
+  excerpt TEXT NOT NULL,
+  body TEXT NOT NULL,
+  sport VARCHAR(60) NOT NULL,
+  image TEXT NOT NULL,
+  source VARCHAR(80) NOT NULL DEFAULT 'CoreMotion News',
+  featured BOOLEAN NOT NULL DEFAULT false,
+  views INTEGER NOT NULL DEFAULT 0,
+  published_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- SCANS
+CREATE TABLE IF NOT EXISTS scans (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  code VARCHAR(40) NOT NULL,
+  product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+  matched BOOLEAN NOT NULL DEFAULT false,
+  ai_insight TEXT NOT NULL DEFAULT '',
+  scanned_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- REPORTS
+CREATE TABLE IF NOT EXISTS reports (
+  id SERIAL PRIMARY KEY,
+  reporter_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  target_type VARCHAR(30) NOT NULL,
+  target_id INTEGER NOT NULL,
+  reason VARCHAR(80) NOT NULL,
+  details TEXT NOT NULL DEFAULT '',
+  status VARCHAR(30) NOT NULL DEFAULT 'Aberto',
+  resolved_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  resolution TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  resolved_at TIMESTAMP
+);
+
+-- ADMIN LOGS
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id SERIAL PRIMARY KEY,
+  admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(40) NOT NULL DEFAULT '',
+  target_id INTEGER,
+  details TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

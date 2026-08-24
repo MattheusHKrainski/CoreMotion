@@ -11,6 +11,7 @@ import {
   IconPackage,
   IconHome,
   IconChat,
+  IconSearch,
 } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ const links = [
   { href: "/admin/pedidos", label: "Pedidos", Icon: IconPackage },
   { href: "/admin/denuncias", label: "Denúncias", Icon: IconShield },
   { href: "/admin/conteudo", label: "Conteúdo", Icon: IconChat },
+  { href: "/admin/integracoes", label: "Integrações", Icon: IconSearch },
 ];
 
 export default async function AdminLayout({
