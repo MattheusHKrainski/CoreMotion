@@ -14,12 +14,21 @@ export default async function Home() {
   await ensureSeed();
   const me = await getCurrentUser();
 
-  const [featuredProducts, recentNews, verifiedStores, recentC2C] = await Promise.all([
-    db.select().from(products).where(eq(products.active, true)).orderBy(desc(products.featured), sql`random()`).limit(8),
-    db.select().from(news).where(eq(news.featured, true)).orderBy(desc(news.publishedAt)).limit(2),
-    db.select().from(stores).where(and(eq(stores.active, true), eq(stores.verified, true))).limit(4),
-    db.select().from(listings).where(eq(listings.status, "published")).orderBy(desc(listings.createdAt)).limit(4),
-  ]);
+  let featuredProducts: any[] = [];
+  let recentNews: any[] = [];
+  let verifiedStores: any[] = [];
+  let recentC2C: any[] = [];
+
+  try {
+    [featuredProducts, recentNews, verifiedStores, recentC2C] = await Promise.all([
+      db.select().from(products).where(eq(products.active, true)).limit(8),
+      db.select().from(news).where(eq(news.featured, true)).limit(2),
+      db.select().from(stores).where(and(eq(stores.active, true), eq(stores.verified, true))).limit(4),
+      db.select().from(listings).where(eq(listings.status, "published")).limit(4),
+    ]);
+  } catch (e) {
+    console.error("Home page query error:", e);
+  }
 
   return (
     <div className="max-w-7xl mx-auto">

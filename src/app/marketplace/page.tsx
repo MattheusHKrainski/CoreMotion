@@ -53,17 +53,22 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     sort === "reviews" ? desc(products.reviewCount) :
     desc(products.featured);
 
-  const list = await db
-    .select({
-      product: products,
-      storeName: stores.name,
-      storeSlug: stores.slug,
-      storeVerified: stores.verified,
-    })
-    .from(products)
-    .leftJoin(stores, eq(products.storeId, stores.id))
-    .where(wheres.length ? and(...wheres) : undefined)
-    .orderBy(orderBy);
+  let list: any[] = [];
+  try {
+    list = await db
+      .select({
+        product: products,
+        storeName: stores.name,
+        storeSlug: stores.slug,
+        storeVerified: stores.verified,
+      })
+      .from(products)
+      .leftJoin(stores, eq(products.storeId, stores.id))
+      .where(wheres.length ? and(...wheres) : undefined)
+      .orderBy(orderBy);
+  } catch (e) {
+    console.error("Marketplace query error:", e);
+  }
 
   const activeFilters = [sport, brand, category, min || max ? "preço" : null].filter(Boolean);
 
