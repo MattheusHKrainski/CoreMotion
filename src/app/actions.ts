@@ -1195,3 +1195,163 @@ export async function adminDeleteStoreAction(formData: FormData) {
   revalidatePath("/lojas");
   revalidatePath("/admin");
 }
+
+/* ============================== VERIFICAÇÃO OFICIAL ============================== */
+
+export async function requestStoreVerificationAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const me = await getCurrentUser();
+  if (!me) return { error: "Faça login para solicitar verificação." };
+
+  const storeId = Number(formData.get("storeId"));
+  if (!storeId) return { error: "Loja inválida." };
+
+  const [store] = await db.select().from(stores).where(eq(stores.id, storeId)).limit(1);
+  if (!store) return { error: "Loja não encontrada." };
+  if (store.ownerId !== me.id && me.role !== "admin") return { error: "Sem permissão." };
+
+  if (["pending", "under_review"].includes(store.verificationStatus)) {
+    return { error: `Sua solicitação já está com status ${store.verificationStatus}. Aguarde análise.` };
+  }
+
+  const legalName = String(formData.get("legalName") ?? "").trim();
+  const tradeName = String(formData.get("tradeName") ?? "").trim();
+  const cnpj = String(formData.get("cnpj") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim();
+  const responsibleName = String(formData.get("responsibleName") ?? "").trim();
+  const responsibleRole = String(formData.get("responsibleRole") ?? "").trim();
+  const responsibleEmail = String(formData.get("responsibleEmail") ?? "").trim();
+  const responsiblePhone = String(formData.get("responsiblePhone") ?? "").trim();
+  const brandName = String(formData.get("brandName") ?? "").trim();
+  const brandRelation = String(formData.get("brandRelation") ?? "").trim();
+  const brandWebsite = String(formData.get("brandWebsite") ?? "").trim();
+  const brandSocial = String(formData.get("brandSocial") ?? "").trim();
+  const documentsRaw = String(formData.get("documents") ?? "").trim();
+
+  if (!legalName) return { error: "Razão social é obrigatória." };
+  if (!tradeName) return { error: "Nome comercial é obrigatório." };
+  if (!cnpj) return { error: "CNPJ é obrigatório." };
+  if (!address) return { error: "Endereço é obrigatório." };
+  if (!responsibleName) return { error: "Nome do responsável é obrigatório." };
+  if (!responsibleEmail || !isValidEmailFormat(responsibleEmail)) return { error: "E-mail profissional inválido." };
+
+  const docs = documentsRaw ? documentsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [];
+
+  // Import storeVerifications table
+  const { storeVerifications } = await import("@/db/schema");
+
+  await db.insert(storeVerifications).values({
+    storeId,
+    status: "pending",
+    legalName,
+    tradeName,
+    cnpj,
+    address,
+    phone,
+    website,
+    responsibleName,
+    responsibleRole,
+    responsibleEmail,
+    responsiblePhone,
+    brandName,
+    brandRelation,
+    brandWebsite,
+    brandSocial,
+    documents: docs,
+  });
+
+  await db.update(stores).set({ verificationStatus: "pending", updatedAt: new Date() }).where(eq(stores.id, storeId));
+
+  // Notificação para admin
+  const { notifications } = await import("@/db/schema");
+  const admins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
+  for (const admin of admins) {
+    await db.insert(notifications).values({
+      userId: admin.id,
+      type: "verification_request",
+      title: `Nova solicitação de verificação: ${store.name}`,
+      message: `${responsibleName} solicitou verificação para a loja ${store.name} (CNPJ ${cnpj})`,
+      link: "/admin/verificacoes",
+    });
+  }
+
+  revalidatePath("/minha-loja/verificacao");
+  revalidatePath("/admin/verificacoes");
+  return { ok: true, message: "Solicitação de verificação enviada. Nossa equipe vai analisar em até 3 dias úteis." };
+}
+
+export async function adminReviewVerificationAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const verificationId = Number(formData.get("verificationId"));
+  const newStatus = String(formData.get("status") ?? ""); // approved | rejected | under_review | revoked
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!verificationId || !["approved", "rejected", "under_review", "revoked"].includes(newStatus)) return;
+
+  const { storeVerifications, stores, notifications } = await import("@/db/schema");
+  const [verification] = await db.select().from(storeVerifications).where(eq(storeVerifications.id, verificationId)).limit(1);
+  if (!verification) return;
+
+  const [store] = await db.select().from(stores).where(eq(stores.id, verification.storeId)).limit(1);
+  if (!store) return;
+
+  await db
+    .update(storeVerifications)
+    .set({
+      status: newStatus,
+      reason,
+      reviewedBy: admin.id,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(storeVerifications.id, verificationId));
+
+  // Atualiza loja
+  if (newStatus === "approved") {
+    await db.update(stores).set({ verified: true, verificationStatus: "approved", updatedAt: new Date() }).where(eq(stores.id, store.id));
+  } else if (newStatus === "rejected") {
+    await db.update(stores).set({ verificationStatus: "rejected", updatedAt: new Date() }).where(eq(stores.id, store.id));
+  } else if (newStatus === "revoked") {
+    await db.update(stores).set({ verified: false, verificationStatus: "revoked", updatedAt: new Date() }).where(eq(stores.id, store.id));
+  } else if (newStatus === "under_review") {
+    await db.update(stores).set({ verificationStatus: "under_review", updatedAt: new Date() }).where(eq(stores.id, store.id));
+  }
+
+  // Notificação para lojista
+  const title =
+    newStatus === "approved"
+      ? `Loja ${store.name} verificada!`
+      : newStatus === "rejected"
+        ? `Verificação de ${store.name} rejeitada`
+        : newStatus === "revoked"
+          ? `Verificação de ${store.name} revogada`
+          : `Verificação de ${store.name} em análise`;
+
+  const message =
+    newStatus === "approved"
+      ? `Parabéns! Sua loja ${store.name} recebeu o selo Verificado do CoreMotion. O selo já aparece na sua vitrine e em todos os produtos.`
+      : newStatus === "rejected"
+        ? `Sua solicitação de verificação para ${store.name} foi rejeitada. Motivo: ${reason || "Não informado"}. Você pode enviar nova solicitação com documentação corrigida.`
+        : newStatus === "revoked"
+          ? `A verificação da loja ${store.name} foi revogada. Motivo: ${reason}. O selo foi removido automaticamente.`
+          : `Sua solicitação para ${store.name} está em análise pela equipe CoreMotion.`;
+
+  await db.insert(notifications).values({
+    userId: store.ownerId,
+    type: `verification_${newStatus}`,
+    title,
+    message,
+    link: newStatus === "approved" ? `/loja/${store.slug}` : "/minha-loja/verificacao",
+  });
+
+  await logAdmin(admin.id, `verification_${newStatus}`, "store_verification", verificationId, `${store.name}: ${reason}`);
+
+  revalidatePath("/admin/verificacoes");
+  revalidatePath(`/loja/${store.slug}`);
+  revalidatePath("/minha-loja");
+}
+

@@ -20,18 +20,22 @@ export async function POST(req: Request) {
     await ensureSeed();
     const body = await req.json();
     const name = String(body.name ?? "").trim();
+    const usernameRaw = String(body.username ?? body.handle ?? "").trim().toLowerCase();
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
-    const roleRaw = String(body.role ?? "athlete");
-    const role = roleRaw === "coach" ? "coach" : "athlete";
+    const roleRaw = String(body.role ?? "user");
+    const role = ["coach", "seller", "store_owner"].includes(roleRaw) ? roleRaw : "user";
     const sport = String(body.sport ?? "Multi-esportes");
     const city = String(body.city ?? "").trim();
+    const supabaseId = body.supabaseId ? String(body.supabaseId) : null;
 
     if (name.length < 2) {
-      return NextResponse.json(
-        { error: "Informe seu nome completo." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Informe seu nome completo." }, { status: 400 });
+    }
+
+    if (usernameRaw) {
+      if (usernameRaw.length < 3) return NextResponse.json({ error: "Nome de usuário deve ter ao menos 3 caracteres." }, { status: 400 });
+      if (!/^[a-z0-9-]+$/.test(usernameRaw)) return NextResponse.json({ error: "Nome de usuário só pode ter letras, números e hífen." }, { status: 400 });
     }
 
     const emailCheck = isAllowedEmail(email);
@@ -40,55 +44,37 @@ export async function POST(req: Request) {
     }
 
     if (email === "demo@sporthub.com" || email === "operacaoamd@gmail.com") {
-      return NextResponse.json(
-        { error: "Este e-mail é reservado. Faça login na conta existente." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Este e-mail é reservado. Faça login na conta existente." }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return NextResponse.json(
-        { error: "A senha precisa ter ao menos 6 caracteres." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "A senha precisa ter ao menos 6 caracteres." }, { status: 400 });
     }
 
-    const existing = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
     if (existing.length) {
-      return NextResponse.json(
-        { error: "Este e-mail já está cadastrado. Faça login." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Este e-mail já está cadastrado. Faça login." }, { status: 400 });
     }
 
-    let handle = slugify(name) || "atleta";
-    const taken = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.handle, handle))
-      .limit(1);
-    if (taken.length)
-      handle = `${handle}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    let handle = usernameRaw ? slugify(usernameRaw) : slugify(name) || "usuario";
+    if (handle.length < 3) handle = `user-${Math.floor(Math.random() * 90000)}`;
+    const taken = await db.select({ id: users.id }).from(users).where(eq(users.handle, handle)).limit(1);
+    if (taken.length) handle = `${handle}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
     const [created] = await db
       .insert(users)
       .values({
+        supabaseId: supabaseId || null,
         name,
         email,
         handle,
         passwordHash: hashPassword(password),
         role,
+        status: "active",
         sport,
         city,
         avatar: PEOPLE.training,
-        bio:
-          role === "coach"
-            ? "Treinador no SportHub. Atualize sua bio no perfil."
-            : "Atleta no SportHub. Atualize sua bio no perfil.",
+        bio: role.includes("store") || role === "seller" ? "Vendedor no CoreMotion." : "Atleta no CoreMotion.",
         pricePerHour: role === "coach" ? 120 : null,
         lastLoginAt: new Date(),
       })
@@ -96,22 +82,13 @@ export async function POST(req: Request) {
 
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 30 * 864e5);
-    await db
-      .insert(sessions)
-      .values({ token, userId: created.id, expiresAt });
+    await db.insert(sessions).values({ token, userId: created.id, expiresAt });
 
-    const res = NextResponse.json({
-      ok: true,
-      redirect: "/",
-      user: { name: created.name, role: created.role, email },
-    });
+    const res = NextResponse.json({ ok: true, redirect: "/", user: { name: created.name, role: created.role, email } });
     res.cookies.set(SESSION_COOKIE, token, cookieOptions());
     return res;
   } catch (e) {
     console.error("register route error", e);
-    return NextResponse.json(
-      { error: "Erro ao criar conta. Tente novamente." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Erro ao criar conta. Tente novamente." }, { status: 500 });
   }
 }

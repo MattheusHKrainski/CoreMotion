@@ -18,11 +18,13 @@ export const users = pgTable(
   "users",
   {
     id: serial("id").primaryKey(),
+    supabaseId: varchar("supabase_id", { length: 80 }), // UUID do Supabase Auth
     name: varchar("name", { length: 120 }).notNull(),
     handle: varchar("handle", { length: 60 }).notNull().unique(),
     email: varchar("email", { length: 160 }).notNull().unique(),
     passwordHash: text("password_hash").notNull(),
-    role: varchar("role", { length: 20 }).notNull().default("athlete"), // athlete | coach | seller | admin
+    role: varchar("role", { length: 30 }).notNull().default("user"), // user | seller | store_owner | community_owner | moderator | admin | super_admin | athlete | coach
+    status: varchar("status", { length: 20 }).notNull().default("active"), // active | suspended | banned | pending
     sport: varchar("sport", { length: 60 }).notNull().default("Multi-esportes"),
     city: varchar("city", { length: 80 }).notNull().default(""),
     bio: text("bio").notNull().default(""),
@@ -38,8 +40,9 @@ export const users = pgTable(
     reportCount: integer("report_count").notNull().default(0),
     lastLoginAt: timestamp("last_login_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("users_email_idx").on(t.email)],
+  (t) => [uniqueIndex("users_email_idx").on(t.email), index("users_supabase_idx").on(t.supabaseId)],
 );
 
 export const sessions = pgTable(
@@ -47,24 +50,20 @@ export const sessions = pgTable(
   {
     id: serial("id").primaryKey(),
     token: varchar("token", { length: 80 }).notNull().unique(),
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [index("sessions_token_idx").on(t.token)],
 );
 
-/* ============================== LOJAS / B2C ============================== */
+/* ============================== LOJAS ============================== */
 
 export const stores = pgTable(
   "stores",
   {
     id: serial("id").primaryKey(),
-    ownerId: integer("owner_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    ownerId: integer("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 120 }).notNull(),
     slug: varchar("slug", { length: 140 }).notNull().unique(),
     description: text("description").notNull().default(""),
@@ -76,16 +75,71 @@ export const stores = pgTable(
     phone: varchar("phone", { length: 30 }).notNull().default(""),
     city: varchar("city", { length: 80 }).notNull().default(""),
     state: varchar("state", { length: 2 }).notNull().default(""),
-    social: varchar("social", { length: 160 }).notNull().default(""), // Instagram / rede social
+    country: varchar("country", { length: 60 }).notNull().default("Brasil"),
+    address: text("address").notNull().default(""),
+    social: varchar("social", { length: 160 }).notNull().default(""),
+    website: text("website").notNull().default(""),
+    businessType: varchar("business_type", { length: 60 }).notNull().default(""),
+    cnpj: varchar("cnpj", { length: 20 }).notNull().default(""),
+    // Verificação oficial CoreMotion
+    verified: boolean("verified").notNull().default(false),
+    verificationStatus: varchar("verification_status", { length: 20 }).notNull().default("not_requested"), // not_requested | pending | under_review | approved | rejected | revoked
     rating: numeric("rating", { precision: 3, scale: 2 }).notNull().default("4.8"),
     followers: integer("followers").notNull().default(0),
     productCount: integer("product_count").notNull().default(0),
-    verified: boolean("verified").notNull().default(false),
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("stores_owner_idx").on(t.ownerId)],
+  (t) => [index("stores_owner_idx").on(t.ownerId), index("stores_slug_idx").on(t.slug)],
+);
+
+export const storeVerifications = pgTable(
+  "store_verifications",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id").notNull().references(() => stores.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // not_requested | pending | under_review | approved | rejected | revoked
+    // Empresa
+    legalName: varchar("legal_name", { length: 160 }).notNull().default(""),
+    tradeName: varchar("trade_name", { length: 160 }).notNull().default(""),
+    cnpj: varchar("cnpj", { length: 20 }).notNull().default(""),
+    address: text("address").notNull().default(""),
+    phone: varchar("phone", { length: 30 }).notNull().default(""),
+    website: text("website").notNull().default(""),
+    // Responsável
+    responsibleName: varchar("responsible_name", { length: 120 }).notNull().default(""),
+    responsibleRole: varchar("responsible_role", { length: 80 }).notNull().default(""),
+    responsibleEmail: varchar("responsible_email", { length: 160 }).notNull().default(""),
+    responsiblePhone: varchar("responsible_phone", { length: 30 }).notNull().default(""),
+    // Marca
+    brandName: varchar("brand_name", { length: 120 }).notNull().default(""),
+    brandRelation: varchar("brand_relation", { length: 80 }).notNull().default(""), // revenda autorizada, representante, etc
+    brandWebsite: text("brand_website").notNull().default(""),
+    brandSocial: text("brand_social").notNull().default(""),
+    // Comprovação e análise
+    documents: jsonb("documents").$type<string[]>().notNull().default([]),
+    reason: text("reason").notNull().default(""),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    reviewedBy: integer("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("store_verifications_store_idx").on(t.storeId), index("store_verifications_status_idx").on(t.status)],
+);
+
+export const verificationDocuments = pgTable(
+  "verification_documents",
+  {
+    id: serial("id").primaryKey(),
+    verificationId: integer("verification_id").notNull().references(() => storeVerifications.id, { onDelete: "cascade" }),
+    fileUrl: text("file_url").notNull(),
+    fileType: varchar("file_type", { length: 40 }).notNull().default("document"),
+    fileName: varchar("file_name", { length: 200 }).notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("verification_docs_verification_idx").on(t.verificationId)],
 );
 
 /* ============================== MARKETPLACE B2C ============================== */
@@ -110,6 +164,7 @@ export const products = pgTable(
     description: text("description").notNull().default(""),
     specs: jsonb("specs").$type<{ label: string; value: string }[]>().notNull().default([]),
     sizes: jsonb("sizes").$type<string[]>().notNull().default([]),
+    condition: varchar("condition", { length: 20 }).notNull().default("novo"), // novo | como_novo | bom | usado | desgastado
     rating: numeric("rating", { precision: 3, scale: 2 }).notNull().default("4.5"),
     reviewCount: integer("review_count").notNull().default(0),
     stock: integer("stock").notNull().default(10),
@@ -120,6 +175,7 @@ export const products = pgTable(
     active: boolean("active").notNull().default(true),
     featured: boolean("featured").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("products_sport_idx").on(t.sport),
@@ -128,28 +184,44 @@ export const products = pgTable(
   ],
 );
 
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: serial("id").primaryKey(),
+    productId: integer("product_id").references(() => products.id, { onDelete: "cascade" }),
+    listingId: integer("listing_id").references(() => listings.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("product_images_product_idx").on(t.productId), index("product_images_listing_idx").on(t.listingId)],
+);
+
 /* ============================== C2C DESAPEGO ============================== */
 
 export const listings = pgTable(
   "listings",
   {
     id: serial("id").primaryKey(),
-    sellerId: integer("seller_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    sellerId: integer("seller_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 180 }).notNull(),
     description: text("description").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-    condition: varchar("condition", { length: 20 }).notNull().default("Seminovo"), // Novo | Seminovo | Usado
+    condition: varchar("condition", { length: 20 }).notNull().default("bom"), // novo | como_novo | bom | usado | desgastado
     category: varchar("category", { length: 60 }).notNull(),
     sport: varchar("sport", { length: 60 }).notNull(),
     brand: varchar("brand", { length: 80 }).notNull().default(""),
     size: varchar("size", { length: 30 }).notNull().default("Único"),
+    color: varchar("color", { length: 40 }).notNull().default(""),
+    quantity: integer("quantity").notNull().default(1),
     images: jsonb("images").$type<string[]>().notNull().default([]),
     city: varchar("city", { length: 80 }).notNull().default(""),
-    status: varchar("status", { length: 20 }).notNull().default("Ativo"), // Ativo | Vendido | Pausado | Removido
+    state: varchar("state", { length: 2 }).notNull().default(""),
+    status: varchar("status", { length: 20 }).notNull().default("published"), // draft | pending | published | paused | sold | removed | rejected
     views: integer("views").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("listings_seller_idx").on(t.sellerId),
@@ -228,7 +300,7 @@ export const orderItems = pgTable("order_items", {
   qty: integer("qty").notNull(),
 });
 
-/* ============================== SOCIAL ============================== */
+/* ============================== SOCIAL / COMUNIDADES ============================== */
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
@@ -269,6 +341,23 @@ export const follows = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("follows_unique").on(t.followerId, t.followingId)],
+);
+
+export const communities = pgTable(
+  "communities",
+  {
+    id: serial("id").primaryKey(),
+    ownerId: integer("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    slug: varchar("slug", { length: 140 }).notNull().unique(),
+    description: text("description").notNull().default(""),
+    image: text("image").notNull().default(""),
+    category: varchar("category", { length: 60 }).notNull().default("Multi-esportes"),
+    memberCount: integer("member_count").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("communities_owner_idx").on(t.ownerId)],
 );
 
 /* ============================== COACHING ============================== */
@@ -326,11 +415,12 @@ export const scans = pgTable("scans", {
 export const reports = pgTable("reports", {
   id: serial("id").primaryKey(),
   reporterId: integer("reporter_id").references(() => users.id, { onDelete: "set null" }),
-  targetType: varchar("target_type", { length: 30 }).notNull(), // user | post | product | review | store | listing
+  targetType: varchar("target_type", { length: 30 }).notNull(),
   targetId: integer("target_id").notNull(),
   reason: varchar("reason", { length: 80 }).notNull(),
+  description: text("description").notNull().default(""),
   details: text("details").notNull().default(""),
-  status: varchar("status", { length: 30 }).notNull().default("Aberto"),
+  status: varchar("status", { length: 30 }).notNull().default("pending"), // pending | reviewing | resolved | dismissed
   resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   resolution: text("resolution").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -343,6 +433,35 @@ export const adminLogs = pgTable("admin_logs", {
   action: varchar("action", { length: 80 }).notNull(),
   targetType: varchar("target_type", { length: 40 }).notNull().default(""),
   targetId: integer("target_id"),
+  reason: text("reason").notNull().default(""),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   details: text("details").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/* ============================== NOTIFICAÇÕES ============================== */
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 40 }).notNull(), // verification_approved | verification_rejected | report_resolved | order_received | etc
+    title: varchar("title", { length: 160 }).notNull(),
+    message: text("message").notNull(),
+    link: text("link").notNull().default(""),
+    read: boolean("read").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("notifications_user_idx").on(t.userId), index("notifications_read_idx").on(t.read)],
+);
+
+/* ============================== CONFIG PLATAFORMA ============================== */
+
+export const platformSettings = pgTable("platform_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 80 }).notNull().unique(),
+  value: jsonb("value").$type<unknown>().notNull(),
+  description: text("description").notNull().default(""),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

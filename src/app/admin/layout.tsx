@@ -19,7 +19,8 @@ export const dynamic = "force-dynamic";
 const links = [
   { href: "/admin", label: "Dashboard", Icon: IconHome },
   { href: "/admin/usuarios", label: "Usuários", Icon: IconUsers },
-  { href: "/admin/lojas", label: "Lojas", Icon: IconBag },
+  { href: "/admin/lojas", label: "Lojas", Icon: IconPackage },
+  { href: "/admin/verificacoes", label: "Verificações", Icon: IconShield },
   { href: "/admin/produtos", label: "Produtos", Icon: IconBag },
   { href: "/admin/desapego", label: "Desapego", Icon: IconUsers },
   { href: "/admin/pedidos", label: "Pedidos", Icon: IconPackage },

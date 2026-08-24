@@ -58,6 +58,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       product: products,
       storeName: stores.name,
       storeSlug: stores.slug,
+      storeVerified: stores.verified,
     })
     .from(products)
     .leftJoin(stores, eq(products.storeId, stores.id))
@@ -157,9 +158,9 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {list.map(({ product: p, storeName, storeSlug }) => (
+              {list.map(({ product: p, storeName, storeSlug, storeVerified }) => (
                 <div key={p.id} className="relative">
-                  <ProductCard p={p} />
+                  <ProductCard p={{ ...p, storeName, storeVerified }} />
                   {storeName && storeSlug && (
                     <Link href={`/loja/${storeSlug}`} className="mt-1.5 block text-[11px] text-slate-500 hover:text-red-600 truncate">
                       Vendido por <strong>{storeName}</strong>

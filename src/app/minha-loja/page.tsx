@@ -143,6 +143,10 @@ export default async function MinhaLojaPage() {
               Editar loja
               <IconArrowRight width={16} height={16} />
             </Link>
+            <Link href="/minha-loja/verificacao" className="flex items-center justify-between bg-sky-50 border border-sky-200 text-sky-800 font-bold px-4 py-3 rounded-xl hover:bg-sky-100">
+              <span className="flex items-center gap-2"><IconVerified width={18} height={18} /> {store.verified ? "Loja verificada" : "Solicitar verificação"}</span>
+              <IconArrowRight width={16} height={16} />
+            </Link>
             <Link href="/minha-loja/produtos" className="flex items-center justify-between bg-white border border-slate-200 font-bold px-4 py-3 rounded-xl hover:border-slate-400">
               <span className="flex items-center gap-2"><IconBag width={18} height={18} /> Gerenciar produtos</span>
               <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">{store.productCount}</span>
@@ -152,7 +156,7 @@ export default async function MinhaLojaPage() {
             </Link>
 
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
-              Sua loja aparece no marketplace em <strong>/lojas</strong> e <strong>/marketplace</strong>. Produtos inativos não são exibidos para compradores.
+              Sua loja aparece em <strong>/lojas</strong> e <strong>/marketplace</strong>. O selo verificado, quando aprovado, aparece automaticamente na vitrine e em todos os produtos.
             </div>
           </div>
         </div>
