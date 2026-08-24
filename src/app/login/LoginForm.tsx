@@ -2,34 +2,37 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { IconMail, IconLock } from "@/components/Icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
 
-  async function doLogin(e?: string, p?: string) {
+  async function doLogin(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     setPending(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: e ?? email, password: p ?? password }),
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Falha no login.");
+      if (error) {
+        setError(error.message);
         setPending(false);
         return;
       }
-      window.location.href = data.redirect || "/";
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      setError(`Erro: ${String(err)}`);
       setPending(false);
     }
   }
@@ -46,7 +49,7 @@ export default function LoginForm() {
         },
       });
       if (error) {
-        setError(`Erro no login com Google: ${error.message}. Verifique se Google OAuth está configurado no Supabase.`);
+        setError(`Erro no login com Google: ${error.message}. Verifique se Google OAuth está configurado no Supabase Dashboard → Auth → Providers.`);
         setGooglePending(false);
       }
     } catch (e) {
@@ -74,7 +77,7 @@ export default function LoginForm() {
         <div className="h-px flex-1 bg-slate-200" />
       </div>
 
-      <form onSubmit={(ev) => { ev.preventDefault(); doLogin(); }} className="space-y-4" noValidate>
+      <form onSubmit={doLogin} className="space-y-4" noValidate>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500">E-mail</label>
           <div className="relative mt-1">
@@ -101,17 +104,12 @@ export default function LoginForm() {
         </button>
       </form>
 
-      <div className="mt-5 rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-500">Acesso rápido (dev)</div>
-        <button type="button" disabled={pending || googlePending} onClick={() => doLogin("demo@sporthub.com", "sporthub123")} className="w-full text-left rounded-lg border border-slate-200 bg-white hover:border-red-300 hover:bg-red-50 px-3 py-2.5 transition disabled:opacity-50">
-          <div className="text-sm font-bold text-slate-900">Conta demonstração</div>
-          <div className="text-[11px] text-slate-500 font-mono">demo@sporthub.com · sporthub123</div>
-        </button>
-        <button type="button" disabled={pending || googlePending} onClick={() => doLogin("operacaoamd@gmail.com", "processadores")} className="w-full text-left rounded-lg border border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50 px-3 py-2.5 transition disabled:opacity-50">
-          <div className="text-sm font-bold text-slate-900">Conta administrador</div>
-          <div className="text-[11px] text-slate-500 font-mono">operacaoamd@gmail.com</div>
-        </button>
-        <p className="text-[11px] text-slate-500 leading-relaxed">Cadastros novos aceitam apenas e-mails reais (Gmail, Outlook, Yahoo, iCloud, UOL...). Para Google OAuth, configure no Supabase Dashboard → Auth → Providers → Google.</p>
+      <p className="mt-5 text-[11px] text-slate-500 leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-3">
+        Para Google OAuth funcionar, configure no Supabase Dashboard → Authentication → Providers → Google. Adicione as URLs de redirect.
+      </p>
+
+      <div className="text-center text-sm mt-6">
+        Não tem conta? <Link href="/cadastro" className="font-bold text-red-600 hover:underline">Criar conta</Link>
       </div>
     </>
   );
