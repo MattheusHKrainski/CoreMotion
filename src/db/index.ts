@@ -7,7 +7,7 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 
-const isSupabase = databaseUrl.includes("supabase.com");
+const isSupabase = databaseUrl.includes("supabase.co");
 
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
@@ -17,7 +17,7 @@ export const pool =
   globalForDb.__arenaNextJsPostgresqlPool ??
   new Pool({
     connectionString: databaseUrl,
-    // Supabase requer SSL
+    // Supabase requer SSL para conexões diretas
     ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
   });
 
