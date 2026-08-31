@@ -159,6 +159,17 @@ export const IconTrendDown = (p: IconProps) => (
     <path d="M14 20h7v-7" />
   </svg>
 );
+export const IconZap = (p: IconProps) => (
+  <svg {...base(p)} fill="currentColor" stroke="none">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+export const IconTrendingUp = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M23 6l-9.5 9.5-5-5L1 18" />
+    <path d="M17 6h6v6" />
+  </svg>
+);
 export const IconCamera = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
