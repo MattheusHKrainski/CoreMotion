@@ -28,32 +28,32 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* ===== HERO ===== */}
-      <section className="gradient-hero text-white">
+      {/* ===== HERO VERMELHO ===== */}
+      <section className="gradient-red text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-32">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-4 py-2 rounded-full mb-6">
               <IconZap width={16} height={16} className="text-white" />
-              <span className="text-sm font-semibold">Marketplace Esportivo</span>
+              <span className="text-sm font-bold">CoreMotion Marketplace</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
-              O ESPORTE
+              SUA PERFORMANCE
               <br />
               EM MOVIMENTO
             </h1>
 
-            <p className="mt-6 text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
-              A plataforma definitiva para atletas. Compre de lojas oficiais, 
-              venda seus equipamentos e conecte-se com a comunidade esportiva.
+            <p className="mt-6 text-lg md:text-xl text-white/90 max-w-2xl leading-relaxed">
+              Lojas oficiais, desapego entre atletas, comunidade e treinadores.
+              Tudo do esporte em um só lugar.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/marketplace" className="btn-primary inline-flex items-center gap-2">
+              <Link href="/marketplace" className="bg-white text-red-600 font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition inline-flex items-center gap-2">
                 Explorar produtos <IconArrowRight width={20} height={20} />
               </Link>
-              <Link href="/vender" className="btn-secondary inline-flex items-center gap-2">
-                <IconUsers width={20} height={20} /> Vender agora
+              <Link href="/desapego" className="bg-emerald-500 text-white font-bold px-8 py-4 rounded-full hover:bg-emerald-600 transition inline-flex items-center gap-2">
+                <IconUsers width={20} height={20} /> Desapego
               </Link>
             </div>
 
@@ -66,7 +66,7 @@ export default async function Home() {
               ].map((stat) => (
                 <div key={stat.label}>
                   <div className="text-3xl md:text-4xl font-black">{stat.num}</div>
-                  <div className="text-sm text-white/60 mt-1">{stat.label}</div>
+                  <div className="text-sm text-white/70 mt-1">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -85,7 +85,7 @@ export default async function Home() {
               { Icon: IconTrendingUp, t: "Melhores preços", d: "Garantido" },
             ].map(({ Icon, t, d }) => (
               <div key={t} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50">
-                <div className="w-12 h-12 rounded-xl bg-white shadow-sm grid place-items-center text-racing-green">
+                <div className="w-12 h-12 rounded-xl bg-white shadow-sm grid place-items-center text-red-600">
                   <Icon width={24} height={24} />
                 </div>
                 <div>
@@ -103,7 +103,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
             <div>
-              <div className="inline-flex items-center gap-2 bg-racing-green text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3">
+              <div className="inline-flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
                 <IconTrendingUp width={14} height={14} />
                 EM ALTA
               </div>
@@ -111,7 +111,7 @@ export default async function Home() {
                 Produtos em Destaque
               </h2>
               <p className="text-sm text-gray-500 mt-3 max-w-md">
-                Selecionados especialmente para você. Qualidade garantida.
+                Selecionados especialmente para você.
               </p>
             </div>
             <Link href="/marketplace" className="btn-primary inline-flex items-center gap-2 self-start">
@@ -165,7 +165,7 @@ export default async function Home() {
                 href={`/marketplace?category=${encodeURIComponent(cat.name)}`}
                 className="group p-8 rounded-2xl bg-gray-50 hover:bg-gray-100 transition text-center"
               >
-                <div className="font-bold text-gray-900 group-hover:text-racing-green transition">{cat.name}</div>
+                <div className="font-bold text-gray-900 group-hover:text-red-600 transition">{cat.name}</div>
               </Link>
             ))}
           </div>
@@ -178,7 +178,7 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
               <div>
-                <div className="inline-flex items-center gap-2 bg-racing-green text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3">
+                <div className="inline-flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
                   <IconShield width={14} height={14} />
                   VERIFICADAS
                 </div>
@@ -211,7 +211,7 @@ export default async function Home() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 line-clamp-2">{s.shortDescription || s.description}</div>
-                  <div className="mt-4 text-xs font-bold text-racing-green group-hover:underline inline-flex items-center gap-1">
+                  <div className="mt-4 text-xs font-bold text-red-600 group-hover:underline inline-flex items-center gap-1">
                     Visitar loja <IconArrowRight width={12} height={12} />
                   </div>
                 </Link>
@@ -221,13 +221,13 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ===== C2C OPPORTUNITIES ===== */}
+      {/* ===== C2C ===== */}
       {recentC2C.length > 0 && (
         <section className="px-4 md:px-8 py-20 bg-gray-950 text-white">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
               <div>
-                <div className="inline-flex items-center gap-2 bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg mb-3">
+                <div className="inline-flex items-center gap-2 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
                   <IconUsers width={14} height={14} />
                   OPORTUNIDADES
                 </div>
@@ -238,22 +238,22 @@ export default async function Home() {
                   Produtos usados em ótimo estado.
                 </p>
               </div>
-              <Link href="/vender" className="btn-primary inline-flex items-center gap-2 self-start">
+              <Link href="/desapego" className="btn-primary inline-flex items-center gap-2 self-start">
                 Ver tudo <IconArrowRight width={18} height={18} />
               </Link>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {recentC2C.map((l) => (
-                <Link key={l.id} href={`/vender/${l.id}`} className="card overflow-hidden group">
+                <Link key={l.id} href={`/desapego/${l.id}`} className="card overflow-hidden group">
                   <div className="aspect-square bg-gray-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={l.images[0] || "https://images.pexels.com/photos/35898730/pexels-photo-35898730.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop"} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                   <div className="p-4">
-                    <div className="text-xs uppercase font-bold text-racing-green mb-1">{l.condition}</div>
+                    <div className="text-xs uppercase font-bold text-emerald-600 mb-1">{l.condition}</div>
                     <div className="font-semibold text-sm line-clamp-2 text-gray-900">{l.title}</div>
-                    <div className="text-xl font-black text-racing-green mt-2">R$ {Number(l.price).toFixed(2)}</div>
+                    <div className="text-xl font-black text-red-600 mt-2">R$ {Number(l.price).toFixed(2)}</div>
                     <div className="text-xs text-gray-500 mt-1">{l.city} {l.state && `- ${l.state}`}</div>
                   </div>
                 </Link>
@@ -267,18 +267,18 @@ export default async function Home() {
       {!me && (
         <section className="px-4 md:px-8 py-20">
           <div className="max-w-4xl mx-auto">
-            <div className="gradient-hero rounded-2xl p-8 md:p-16 text-white text-center">
+            <div className="gradient-red rounded-3xl p-8 md:p-16 text-white text-center">
               <h2 className="text-3xl md:text-5xl font-black">
                 Faça Parte do CoreMotion
               </h2>
-              <p className="text-gray-300 mt-4 max-w-xl mx-auto text-lg">
+              <p className="text-gray-200 mt-4 max-w-xl mx-auto text-lg">
                 Crie sua conta grátis para comprar, vender e conectar-se.
               </p>
               <div className="mt-10 flex flex-wrap justify-center gap-4">
-                <Link href="/cadastro" className="bg-white text-racing-green font-bold px-8 py-4 rounded-lg hover:bg-gray-100 transition shadow-md">
+                <Link href="/cadastro" className="bg-white text-red-600 font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition">
                   Criar conta grátis
                 </Link>
-                <Link href="/login" className="border-2 border-white/40 hover:bg-white/10 font-bold px-8 py-4 rounded-lg transition">
+                <Link href="/login" className="border-2 border-white/40 hover:bg-white/10 font-bold px-8 py-4 rounded-full transition">
                   Já tenho conta
                 </Link>
               </div>
@@ -292,9 +292,9 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
             <div className="col-span-2">
-              <div className="font-black text-3xl text-racing-green">CoreMotion</div>
+              <div className="font-black text-3xl text-red-600">CoreMotion</div>
               <p className="text-sm text-gray-500 mt-3 max-w-xs">
-                Seu marketplace esportivo premium.
+                Seu marketplace esportivo.
               </p>
             </div>
             <div>
@@ -302,13 +302,13 @@ export default async function Home() {
               <ul className="space-y-2 text-sm text-gray-500">
                 <li><Link href="/marketplace">Marketplace</Link></li>
                 <li><Link href="/lojas">Lojas</Link></li>
-                <li><Link href="/vender">Oportunidades</Link></li>
+                <li><Link href="/desapego">Oportunidades</Link></li>
               </ul>
             </div>
             <div>
               <div className="font-bold text-sm mb-4 text-gray-900">Vender</div>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link href="/vender">Publicar produto</Link></li>
+                <li><Link href="/desapego">Publicar produto</Link></li>
                 <li><Link href="/minha-loja">Criar loja</Link></li>
                 <li><Link href="/vender/meus-anuncios">Meus anúncios</Link></li>
               </ul>

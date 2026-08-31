@@ -77,7 +77,7 @@ export default function LoginForm() {
         type="button"
         onClick={loginWithGoogle}
         disabled={googlePending || pending || !isConfigured}
-        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold py-3.5 rounded-xl transition text-sm text-gray-700"
+        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:border-gray-200 disabled:bg-gray-100 font-semibold py-3.5 rounded-xl transition text-sm text-gray-700"
       >
         <IconGoogle width={20} height={20} />
         {googlePending ? "Redirecionando..." : "Continuar com Google"}
@@ -103,7 +103,7 @@ export default function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               disabled={pending || googlePending || !isConfigured}
-              className="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-racing-green/20 focus:border-racing-green disabled:bg-gray-100"
+              className="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 disabled:bg-gray-100"
             />
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function LoginForm() {
         <div>
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Senha</label>
-            <Link href="/recuperar-senha" className="text-xs font-bold text-racing-green hover:underline">
+            <Link href="/recuperar-senha" className="text-xs font-bold text-red-600 hover:underline">
               Esqueci minha senha
             </Link>
           </div>
@@ -126,7 +126,7 @@ export default function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               disabled={pending || googlePending || !isConfigured}
-              className="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-racing-green/20 focus:border-racing-green disabled:bg-gray-100"
+              className="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 disabled:bg-gray-100"
             />
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={pending || googlePending || !isConfigured}
-          className="w-full btn-primary py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-3.5 rounded-xl transition"
         >
           {pending ? "Entrando..." : "Entrar"}
         </button>
@@ -154,7 +154,7 @@ export default function LoginForm() {
 
       <div className="text-center text-sm mt-8 text-gray-600">
         Ainda não possui uma conta?{" "}
-        <Link href="/cadastro" className="font-bold text-racing-green hover:underline">
+        <Link href="/cadastro" className="font-bold text-red-600 hover:underline">
           Criar conta
         </Link>
       </div>
