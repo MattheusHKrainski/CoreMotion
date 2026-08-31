@@ -27,14 +27,14 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* ===== HERO VERMELHO ===== */}
+    <div className="min-h-screen bg-gray-50">
+      {/* ===== HERO ===== */}
       <section className="gradient-red text-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 md:py-28">
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-4 py-2 rounded-full mb-6">
               <IconZap width={16} height={16} className="text-white" />
-              <span className="text-sm font-bold">CoreMotion Marketplace</span>
+              <span className="text-sm font-semibold">Marketplace Esportivo</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
@@ -49,10 +49,10 @@ export default async function Home() {
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/marketplace" className="bg-white text-red-600 font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition inline-flex items-center gap-2">
+              <Link href="/marketplace" className="bg-white text-red-600 font-bold px-8 py-4 rounded-lg hover:bg-gray-100 transition inline-flex items-center gap-2">
                 Explorar produtos <IconArrowRight width={20} height={20} />
               </Link>
-              <Link href="/desapego" className="bg-emerald-500 text-white font-bold px-8 py-4 rounded-full hover:bg-emerald-600 transition inline-flex items-center gap-2">
+              <Link href="/desapego" className="bg-emerald-500 text-white font-bold px-8 py-4 rounded-lg hover:bg-emerald-600 transition inline-flex items-center gap-2">
                 <IconUsers width={20} height={20} /> Desapego
               </Link>
             </div>
@@ -151,19 +151,19 @@ export default async function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { name: "Corrida", color: "bg-blue-50" },
-              { name: "Futebol", color: "bg-green-50" },
-              { name: "Basquete", color: "bg-orange-50" },
-              { name: "Treino", color: "bg-red-50" },
-              { name: "Natação", color: "bg-cyan-50" },
-              { name: "Ciclismo", color: "bg-yellow-50" },
-              { name: "Tênis", color: "bg-lime-50" },
-              { name: "Luta", color: "bg-purple-50" },
+              { name: "Corrida" },
+              { name: "Futebol" },
+              { name: "Basquete" },
+              { name: "Treino" },
+              { name: "Natação" },
+              { name: "Ciclismo" },
+              { name: "Tênis" },
+              { name: "Luta" },
             ].map((cat) => (
               <Link
                 key={cat.name}
                 href={`/marketplace?category=${encodeURIComponent(cat.name)}`}
-                className="group p-8 rounded-2xl bg-gray-50 hover:bg-gray-100 transition text-center"
+                className="group p-8 rounded-2xl bg-gray-50 hover:bg-gray-100 transition text-center border border-gray-200"
               >
                 <div className="font-bold text-gray-900 group-hover:text-red-600 transition">{cat.name}</div>
               </Link>
@@ -204,7 +204,7 @@ export default async function Home() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold truncate">{s.name}</span>
+                        <span className="font-bold truncate text-gray-900">{s.name}</span>
                         <VerifiedBadge size="sm" withLabel={false} />
                       </div>
                       <div className="text-xs text-gray-500 truncate">{s.city} {s.state && `- ${s.state}`}</div>
@@ -223,7 +223,7 @@ export default async function Home() {
 
       {/* ===== C2C ===== */}
       {recentC2C.length > 0 && (
-        <section className="px-4 md:px-8 py-20 bg-gray-950 text-white">
+        <section className="px-4 md:px-8 py-20 gradient-dark text-white">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
               <div>
@@ -250,7 +250,7 @@ export default async function Home() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={l.images[0] || "https://images.pexels.com/photos/35898730/pexels-photo-35898730.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop"} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
-                  <div className="p-4">
+                  <div className="p-4 bg-white">
                     <div className="text-xs uppercase font-bold text-emerald-600 mb-1">{l.condition}</div>
                     <div className="font-semibold text-sm line-clamp-2 text-gray-900">{l.title}</div>
                     <div className="text-xl font-black text-red-600 mt-2">R$ {Number(l.price).toFixed(2)}</div>
@@ -267,7 +267,7 @@ export default async function Home() {
       {!me && (
         <section className="px-4 md:px-8 py-20">
           <div className="max-w-4xl mx-auto">
-            <div className="gradient-red rounded-3xl p-8 md:p-16 text-white text-center">
+            <div className="gradient-red rounded-2xl p-8 md:p-16 text-white text-center">
               <h2 className="text-3xl md:text-5xl font-black">
                 Faça Parte do CoreMotion
               </h2>
@@ -275,10 +275,10 @@ export default async function Home() {
                 Crie sua conta grátis para comprar, vender e conectar-se.
               </p>
               <div className="mt-10 flex flex-wrap justify-center gap-4">
-                <Link href="/cadastro" className="bg-white text-red-600 font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition">
+                <Link href="/cadastro" className="bg-white text-red-600 font-bold px-8 py-4 rounded-lg hover:bg-gray-100 transition">
                   Criar conta grátis
                 </Link>
-                <Link href="/login" className="border-2 border-white/40 hover:bg-white/10 font-bold px-8 py-4 rounded-full transition">
+                <Link href="/login" className="border-2 border-white/40 hover:bg-white/10 font-bold px-8 py-4 rounded-lg transition">
                   Já tenho conta
                 </Link>
               </div>

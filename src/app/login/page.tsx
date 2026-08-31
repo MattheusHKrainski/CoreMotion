@@ -12,7 +12,7 @@ export default function LoginPage() {
         <div className="max-w-md text-white">
           <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-4 py-2 rounded-full mb-8">
             <IconLogo width={20} height={20} className="text-white" />
-            <span className="text-sm font-bold">CoreMotion</span>
+            <span className="text-sm font-semibold">CoreMotion</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
             Sua performance
@@ -30,7 +30,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8">
             <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-red-600 grid place-items-center text-white">
+              <div className="w-9 h-9 rounded-lg bg-red-600 grid place-items-center text-white">
                 <IconLogo width={20} height={20} />
               </div>
               <span className="font-black text-lg text-gray-900">CoreMotion</span>
