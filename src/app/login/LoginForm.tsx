@@ -20,7 +20,7 @@ export default function LoginForm() {
     if (e) e.preventDefault();
     
     if (!isConfigured) {
-      setError("Configuração do Supabase incompleta. Verifique as variáveis de ambiente.");
+      setError("Configuração do Supabase incompleta.");
       return;
     }
 
@@ -47,7 +47,7 @@ export default function LoginForm() {
 
   async function loginWithGoogle() {
     if (!isConfigured) {
-      setError("Configuração do Supabase incompleta. Verifique as variáveis de ambiente.");
+      setError("Configuração do Supabase incompleta.");
       return;
     }
 
@@ -62,7 +62,7 @@ export default function LoginForm() {
         },
       });
       if (error) {
-        setError(`Erro no login com Google: ${error.message}. Configure no Supabase Dashboard → Auth → Providers → Google.`);
+        setError(`Erro no login com Google: ${error.message}`);
         setGooglePending(false);
       }
     } catch (e) {
@@ -73,7 +73,6 @@ export default function LoginForm() {
 
   return (
     <>
-      {/* Google OAuth */}
       <button
         type="button"
         onClick={loginWithGoogle}
@@ -133,13 +132,13 @@ export default function LoginForm() {
         </div>
 
         {!isConfigured && (
-          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <strong>Atenção:</strong> Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no arquivo .env
+          <div className="text-sm text-warning bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+            <strong>Atenção:</strong> Configure as variáveis de ambiente no .env
           </div>
         )}
 
         {error && (
-          <div className="text-sm text-error-red bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="text-sm text-error bg-red-50 border border-red-200 rounded-xl px-4 py-3">
             {error}
           </div>
         )}
@@ -147,7 +146,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={pending || googlePending || !isConfigured}
-          className="w-full bg-racing-green hover:bg-racing-green-light disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition shadow-premium"
+          className="w-full btn-primary py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? "Entrando..." : "Entrar"}
         </button>
