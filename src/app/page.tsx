@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
-import { products, news, stores, listings } from "@/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { products, stores, listings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -13,14 +13,12 @@ export default async function Home() {
   const me = await getCurrentUser();
 
   let featuredProducts: any[] = [];
-  let recentNews: any[] = [];
   let verifiedStores: any[] = [];
   let recentC2C: any[] = [];
 
   try {
-    [featuredProducts, recentNews, verifiedStores, recentC2C] = await Promise.all([
+    [featuredProducts, verifiedStores, recentC2C] = await Promise.all([
       db.select().from(products).where(eq(products.active, true)).limit(8),
-      db.select().from(news).where(eq(news.featured, true)).limit(2),
       db.select().from(stores).where(eq(stores.verified, true)).limit(4),
       db.select().from(listings).where(eq(listings.status, "published")).limit(4),
     ]);
@@ -31,23 +29,23 @@ export default async function Home() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-racing-green text-white">
+      <section className="relative overflow-hidden gradient-racing text-white">
         <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/35898730/pexels-photo-35898730.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&fit=crop')] bg-cover bg-center opacity-10" />
-        <div className="relative px-4 md:px-8 py-24 md:py-36">
+        <div className="relative px-4 md:px-8 py-28 md:py-40">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-              Seu esporte.
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+              O esporte
               <br />
-              <span className="text-white/80">Seu movimento.</span>
+              <span className="text-white/80">em movimento.</span>
             </h1>
             <p className="mt-6 text-lg md:text-xl text-white/80 max-w-2xl">
-              Encontre produtos de lojas oficiais e atletas. Compre, venda e conecte-se com a comunidade esportiva.
+              Produtos, marcas, atletas e oportunidades em um só lugar.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/marketplace" className="inline-flex items-center gap-2 bg-white text-racing-green font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition">
-                Explorar produtos <IconArrowRight width={20} height={20} />
+              <Link href="/marketplace" className="inline-flex items-center gap-2 bg-white text-racing-green font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition shadow-premium-lg">
+                Comprar agora <IconArrowRight width={20} height={20} />
               </Link>
-              <Link href="/vender" className="inline-flex items-center gap-2 bg-racing-green-light text-white font-bold px-8 py-4 rounded-full border border-white/30 hover:bg-racing-green transition">
+              <Link href="/vender" className="inline-flex items-center gap-2 bg-racing-green-accent text-white font-bold px-8 py-4 rounded-full border border-white/30 hover:bg-racing-green-light transition">
                 <IconUsers width={20} height={20} /> Vender produto
               </Link>
             </div>
@@ -56,7 +54,7 @@ export default async function Home() {
       </section>
 
       {/* Trust badges */}
-      <section className="px-4 md:px-8 py-10 border-b border-gray-200 bg-white">
+      <section className="px-4 md:px-8 py-12 border-b border-gray-200 bg-white">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { Icon: IconShield, t: "Compra segura", d: "Proteção ao comprador" },
@@ -174,42 +172,10 @@ export default async function Home() {
         </section>
       )}
 
-      {/* News */}
-      {recentNews.length > 0 && (
-        <section className="px-4 md:px-8 py-16 bg-gray-100">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-black tracking-tight">Notícias do esporte</h2>
-              <p className="text-sm text-gray-500 mt-2">Acompanhe o que acontece no mundo esportivo</p>
-            </div>
-            <Link href="/noticias" className="text-sm font-bold text-racing-green hover:underline inline-flex items-center gap-1">
-              Ver todas <IconArrowRight width={16} height={16} />
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {recentNews.map((n) => (
-              <Link key={n.id} href={`/noticias/${n.slug}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition flex flex-col md:flex-row">
-                <div className="md:w-2/5 aspect-video md:aspect-auto bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={n.image} alt={n.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-6 md:w-3/5 flex flex-col justify-center">
-                  <div className="text-xs uppercase font-bold text-gray-500">{n.sport} · {n.source}</div>
-                  <h3 className="font-bold text-xl mt-2">{n.title}</h3>
-                  <p className="text-sm text-gray-600 mt-3 line-clamp-2">{n.excerpt}</p>
-                  <div className="text-xs text-gray-400 mt-4">{new Date(n.publishedAt).toLocaleDateString("pt-BR")}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* CTA */}
       {!me && (
         <section className="px-4 md:px-8 py-20">
-          <div className="bg-racing-green rounded-3xl p-8 md:p-16 text-white text-center">
+          <div className="gradient-racing rounded-3xl p-8 md:p-16 text-white text-center">
             <h2 className="text-3xl md:text-4xl font-black">Faça parte do CoreMotion</h2>
             <p className="text-gray-300 mt-4 max-w-2xl mx-auto text-lg">
               Crie sua conta grátis para comprar, vender e conectar-se com atletas de todo o Brasil.
